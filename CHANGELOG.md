@@ -1,3 +1,17 @@
+#### 6.1.6
+* fixed google new login 500 issue with undefined optional params
+
+#### 6.1.4
+* supporting angular 4 in package.json
+
+#### 6.1.3
+* pull request #83: avoid import Type from `src`.
+
+#### 6.1.2
+* pull request #82: throw 'Authentication Canceled' when on a cordova app
+* issue #78: added optional params on google provider
+* issue #77: added ability to change the exchangeForToken request method
+
 #### 6.1.0
 * pull request #73: universal support
 * throwing `new Error('Authentication Canceled')` when popup is closed prematurely so you could stop your spinners on `subscribe({..., error: err => <stop spinners here>, complete: () => <and here>})`

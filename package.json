@@ -1,12 +1,14 @@
 {
   "name": "ng2-ui-auth",
-  "version": "6.1.0",
+  "version": "6.1.6",
   "description": "angular2 migration for satellizer",
   "main": "./commonjs/ng2-ui-auth.module.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "ngc": "ngc --project tsconfig.def.json",
     "tsc": "tsc --project tsconfig.def.json",
+    "rollup:dev": "rollup -c",
+    "rollup:prod": "rollup -c rollup.config.prod.js",
     "compile": "npm run ngc && npm run tsc && rollup -c && rollup -c rollup.config.prod.js"
   },
   "keywords": [
@@ -26,8 +28,8 @@
   },
   "homepage": "https://github.com/ronzeidman/ng2-ui-auth#readme",
   "peerDependencies": {
-    "@angular/http": "^2.0.0",
-    "@angular/core": "^2.0.0"
+    "@angular/http": "2.x || 4.x",
+    "@angular/core": "2.x || 4.x"
   },
   "typings": "./commonjs/ng2-ui-auth.module.d.ts",
   "devDependencies": {
@@ -38,13 +40,13 @@
     "@angular/http": "2.0.0",
     "@angular/platform-browser": "2.0.0",
     "@angular/platform-server": "2.0.0",
-    "@types/es6-shim": "^0.31.32",
-    "es6-shim": "^0.35.1",
+    "@types/es6-shim": "0.31.32",
+    "es6-shim": "0.35.1",
     "reflect-metadata": "0.1.8",
-    "rollup": "^0.36.3",
-    "rollup-plugin-node-resolve": "^2.0.0",
-    "rollup-plugin-typescript": "^0.8.1",
-    "rollup-plugin-uglify": "^1.0.1",
+    "rollup": "0.41.4",
+    "rollup-plugin-node-resolve": "2.0.0",
+    "rollup-plugin-typescript": "0.8.1",
+    "rollup-plugin-uglify": "1.0.1",
     "rxjs": "5.0.0-beta.12",
     "typescript": "2.0.6",
     "zone.js": "0.6.25"

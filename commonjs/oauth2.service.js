@@ -66,7 +66,13 @@ var Oauth2Service = (function () {
     Oauth2Service.prototype.exchangeForToken = function (oauthData, userData) {
         var data = utils_1.assign({}, this.defaults, oauthData, userData);
         var exchangeForTokenUrl = this.config.baseUrl ? utils_1.joinUrl(this.config.baseUrl, this.defaults.url) : this.defaults.url;
-        return this.http.post(exchangeForTokenUrl, JSON.stringify(data), { withCredentials: this.config.withCredentials });
+        return this.defaults.method
+            ? this.http.request(exchangeForTokenUrl, {
+                body: JSON.stringify(data),
+                withCredentials: this.config.withCredentials,
+                method: this.defaults.method
+            })
+            : this.http.post(exchangeForTokenUrl, JSON.stringify(data), { withCredentials: this.config.withCredentials });
     };
     Oauth2Service.prototype.buildQueryString = function () {
         var _this = this;
@@ -89,7 +95,9 @@ var Oauth2Service = (function () {
                             paramValue = [_this.defaults.scopePrefix, paramValue].join(_this.defaults.scopeDelimiter);
                         }
                     }
-                    keyValuePairs.push([paramName, paramValue]);
+                    if (params !== 'optionalUrlParams' || typeof paramValue !== 'undefined') {
+                        keyValuePairs.push([paramName, paramValue]);
+                    }
                 });
             }
         });

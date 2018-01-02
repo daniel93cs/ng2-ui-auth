@@ -4,11 +4,15 @@ import {assign} from './utils';
 import {ConfigService, IPopupOptions} from './config.service';
 import 'rxjs/add/observable/interval';
 import 'rxjs/add/observable/fromEvent';
+import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/empty';
+import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/take';
-import 'rxjs/add/operator/takeWhile';
+import 'rxjs/add/operator/map';
 
+import 'rxjs/add/operator/takeWhile';
+import 'rxjs/add/operator/delay';
 
 /**
  * Created by Ron on 17/12/2015.
@@ -62,7 +66,7 @@ export class PopupService {
         let UA = window.navigator.userAgent;
         let windowName = (this.config.cordova || UA.indexOf('CriOS') > -1) ? '_blank' : name;
 
-        this.popupWindow = window.open(url, '_self', stringifiedOptions);
+        this.popupWindow = window.open(url, windowName, stringifiedOptions);
 
         window['popup'] = this.popupWindow;
 
@@ -75,36 +79,38 @@ export class PopupService {
 
     eventListener(redirectUri: string) {
         return Observable
-            .fromEvent<Event>(this.popupWindow, 'loadstart')
-            .switchMap((event: Event & { url: string }) => {
-                if (!this.popupWindow || this.popupWindow.closed) {
-                    return Observable.throw(new Error('Authentication Canceled'));
-                }
-                if (event.url.indexOf(redirectUri) !== 0) {
-                    return Observable.empty();
-                }
+            .merge(
+                Observable.fromEvent(this.popupWindow, 'loadstart')
+                .switchMap((event: Event & { url: string }) => {
 
-                let parser = document.createElement('a');
-                parser.href = event.url;
-
-                if (parser.search || parser.hash) {
-                    const queryParams = parser.search.substring(1).replace(/\/$/, '');
-                    const hashParams = parser.hash.substring(1).replace(/\/$/, '');
-                    const hash = PopupService.parseQueryString(hashParams);
-                    const qs = PopupService.parseQueryString(queryParams);
-                    const allParams = assign({}, qs, hash);
-
-                    this.popupWindow.close();
-
-                    if (allParams.error) {
-                        throw allParams.error;
-                    } else {
-                        return Observable.of(allParams);
+                    if (!this.popupWindow || this.popupWindow.closed) {
+                        return Observable.throw(new Error('Authentication Canceled'));
                     }
-                }
-                return Observable.empty();
-            })
-            .take(1);
+                    if (event.url.indexOf(redirectUri) !== 0) {
+                        return Observable.empty();
+                    }
+
+                    let parser = document.createElement('a');
+                    parser.href = event.url;
+
+                    if (parser.search || parser.hash) {
+                        const queryParams = parser.search.substring(1).replace(/\/$/, '');
+                        const hashParams = parser.hash.substring(1).replace(/\/$/, '');
+                        const hash = PopupService.parseQueryString(hashParams);
+                        const qs = PopupService.parseQueryString(queryParams);
+                        const allParams = assign({}, qs, hash);
+
+                        this.popupWindow.close();
+
+                        if (allParams.error) {
+                            throw allParams.error;
+                        } else {
+                            return Observable.of(allParams);
+                        }
+                    }
+                    return Observable.empty();
+                }), Observable.fromEvent<Event>(this.popupWindow, 'exit').delay(100).map(() => {throw new Error('Authentication Canceled')})
+                       ).take(1);
     }
 
     pollPopup() {

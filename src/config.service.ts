@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
-import {Response} from '@angular/http';
+import {RequestMethod, Response} from '@angular/http';
 
 /**
  * Created by Ron on 17/12/2015.
@@ -21,6 +21,7 @@ export interface IOauth1Options {
     authorizationEndpoint?: string;
     oauthType?: string;
     exchangeForToken?: boolean | ((options: {code?: string, state?: string}, userData?: any) => Observable<Response>);
+    method?: string | RequestMethod;
 }
 
 export interface IOauth2Options extends IOauth1Options {
@@ -81,7 +82,7 @@ export class ConfigService {
             } else {
                 Object.keys(config[key]).map(provider => {
                     this.providers[provider] = Object.assign(
-                        this.providers[provider] || {}, 
+                        this.providers[provider] || {},
                         config.providers[provider]
                     );
                 });
@@ -157,7 +158,7 @@ export class ConfigService {
             authorizationEndpoint: 'https://accounts.google.com/o/oauth2/auth',
             redirectUri: this.getHttpHost(),
             requiredUrlParams: ['scope'],
-            optionalUrlParams: ['display', 'state'],
+            optionalUrlParams: ['display', 'state', 'prompt', 'login_hint', 'access_type', 'include_granted_scopes', 'openid.realm', 'hd'],
             scope: ['profile', 'email'],
             scopePrefix: 'openid',
             scopeDelimiter: ' ',

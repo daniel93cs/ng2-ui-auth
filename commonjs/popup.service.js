@@ -14,10 +14,14 @@ var utils_1 = require('./utils');
 var config_service_1 = require('./config.service');
 require('rxjs/add/observable/interval');
 require('rxjs/add/observable/fromEvent');
+require('rxjs/add/observable/throw');
 require('rxjs/add/observable/empty');
+require('rxjs/add/observable/merge');
 require('rxjs/add/operator/switchMap');
 require('rxjs/add/operator/take');
+require('rxjs/add/operator/map');
 require('rxjs/add/operator/takeWhile');
+require('rxjs/add/operator/delay');
 var PopupService = (function () {
     function PopupService(config) {
         this.config = config;
@@ -56,7 +60,7 @@ var PopupService = (function () {
         var stringifiedOptions = PopupService.stringifyOptions(PopupService.prepareOptions(options));
         var UA = window.navigator.userAgent;
         var windowName = (this.config.cordova || UA.indexOf('CriOS') > -1) ? '_blank' : name;
-        this.popupWindow = window.open(url, '_self', stringifiedOptions);
+        this.popupWindow = window.open(url, windowName, stringifiedOptions);
         window['popup'] = this.popupWindow;
         if (this.popupWindow && this.popupWindow.focus) {
             this.popupWindow.focus();
@@ -66,7 +70,7 @@ var PopupService = (function () {
     PopupService.prototype.eventListener = function (redirectUri) {
         var _this = this;
         return Observable_1.Observable
-            .fromEvent(this.popupWindow, 'loadstart')
+            .merge(Observable_1.Observable.fromEvent(this.popupWindow, 'loadstart')
             .switchMap(function (event) {
             if (!_this.popupWindow || _this.popupWindow.closed) {
                 return Observable_1.Observable.throw(new Error('Authentication Canceled'));
@@ -91,8 +95,7 @@ var PopupService = (function () {
                 }
             }
             return Observable_1.Observable.empty();
-        })
-            .take(1);
+        }), Observable_1.Observable.fromEvent(this.popupWindow, 'exit').delay(100).map(function () { throw new Error('Authentication Canceled'); })).take(1);
     };
     PopupService.prototype.pollPopup = function () {
         var _this = this;

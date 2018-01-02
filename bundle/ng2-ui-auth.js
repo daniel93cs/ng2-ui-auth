@@ -5,15 +5,19 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var _angular_core = require('@angular/core');
 var _angular_http = require('@angular/http');
 var rxjs_Observable = require('rxjs/Observable');
-var rxjs_add_operator_switchMap = require('rxjs/add/operator/switchMap');
-var rxjs_add_operator_catch = require('rxjs/add/operator/catch');
-var rxjs_add_observable_interval = require('rxjs/add/observable/interval');
-var rxjs_add_observable_fromEvent = require('rxjs/add/observable/fromEvent');
-var rxjs_add_observable_empty = require('rxjs/add/observable/empty');
-var rxjs_add_operator_take = require('rxjs/add/operator/take');
-var rxjs_add_operator_takeWhile = require('rxjs/add/operator/takeWhile');
-var rxjs_add_observable_of = require('rxjs/add/observable/of');
-var rxjs_add_operator_do = require('rxjs/add/operator/do');
+require('rxjs/add/operator/switchMap');
+require('rxjs/add/operator/catch');
+require('rxjs/add/observable/interval');
+require('rxjs/add/observable/fromEvent');
+require('rxjs/add/observable/throw');
+require('rxjs/add/observable/empty');
+require('rxjs/add/observable/merge');
+require('rxjs/add/operator/take');
+require('rxjs/add/operator/map');
+require('rxjs/add/operator/takeWhile');
+require('rxjs/add/operator/delay');
+require('rxjs/add/observable/of');
+require('rxjs/add/operator/do');
 
 function __decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -101,7 +105,7 @@ var ConfigService = (function () {
                 authorizationEndpoint: 'https://accounts.google.com/o/oauth2/auth',
                 redirectUri: this.getHttpHost(),
                 requiredUrlParams: ['scope'],
-                optionalUrlParams: ['display', 'state'],
+                optionalUrlParams: ['display', 'state', 'prompt', 'login_hint', 'access_type', 'include_granted_scopes', 'openid.realm', 'hd'],
                 scope: ['profile', 'email'],
                 scopePrefix: 'openid',
                 scopeDelimiter: ' ',
@@ -589,7 +593,7 @@ var PopupService = (function () {
     PopupService.prototype.eventListener = function (redirectUri) {
         var _this = this;
         return rxjs_Observable.Observable
-            .fromEvent(this.popupWindow, 'loadstart')
+            .merge(rxjs_Observable.Observable.fromEvent(this.popupWindow, 'loadstart')
             .switchMap(function (event) {
             if (!_this.popupWindow || _this.popupWindow.closed) {
                 return rxjs_Observable.Observable.throw(new Error('Authentication Canceled'));
@@ -614,8 +618,7 @@ var PopupService = (function () {
                 }
             }
             return rxjs_Observable.Observable.empty();
-        })
-            .take(1);
+        }), rxjs_Observable.Observable.fromEvent(this.popupWindow, 'exit').delay(100).map(function () { throw new Error('Authentication Canceled'); })).take(1);
     };
     PopupService.prototype.pollPopup = function () {
         var _this = this;
@@ -694,7 +697,13 @@ var Oauth1Service = (function () {
     Oauth1Service.prototype.exchangeForToken = function (oauthData, userData) {
         var data = assign({}, this.defaults, oauthData, userData);
         var exchangeForTokenUrl = this.config.baseUrl ? joinUrl(this.config.baseUrl, this.defaults.url) : this.defaults.url;
-        return this.http.post(exchangeForTokenUrl, data, { withCredentials: this.config.withCredentials });
+        return this.defaults.method
+            ? this.http.request(exchangeForTokenUrl, {
+                body: JSON.stringify(data),
+                withCredentials: this.config.withCredentials,
+                method: this.defaults.method
+            })
+            : this.http.post(exchangeForTokenUrl, data, { withCredentials: this.config.withCredentials });
     };
     Oauth1Service.prototype.buildQueryString = function (obj) {
         return Object.keys(obj).map(function (key) {
@@ -765,7 +774,13 @@ var Oauth2Service = (function () {
     Oauth2Service.prototype.exchangeForToken = function (oauthData, userData) {
         var data = assign({}, this.defaults, oauthData, userData);
         var exchangeForTokenUrl = this.config.baseUrl ? joinUrl(this.config.baseUrl, this.defaults.url) : this.defaults.url;
-        return this.http.post(exchangeForTokenUrl, JSON.stringify(data), { withCredentials: this.config.withCredentials });
+        return this.defaults.method
+            ? this.http.request(exchangeForTokenUrl, {
+                body: JSON.stringify(data),
+                withCredentials: this.config.withCredentials,
+                method: this.defaults.method
+            })
+            : this.http.post(exchangeForTokenUrl, JSON.stringify(data), { withCredentials: this.config.withCredentials });
     };
     Oauth2Service.prototype.buildQueryString = function () {
         var _this = this;
@@ -788,7 +803,9 @@ var Oauth2Service = (function () {
                             paramValue = [_this.defaults.scopePrefix, paramValue].join(_this.defaults.scopeDelimiter);
                         }
                     }
-                    keyValuePairs.push([paramName, paramValue]);
+                    if (params !== 'optionalUrlParams' || typeof paramValue !== 'undefined') {
+                        keyValuePairs.push([paramName, paramValue]);
+                    }
                 });
             }
         });
