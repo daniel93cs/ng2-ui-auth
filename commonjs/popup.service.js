@@ -60,7 +60,7 @@ var PopupService = (function () {
         var stringifiedOptions = PopupService.stringifyOptions(PopupService.prepareOptions(options));
         var UA = window.navigator.userAgent;
         var windowName = (this.config.cordova || UA.indexOf('CriOS') > -1) ? '_blank' : name;
-        this.popupWindow = window.open(url, windowName, stringifiedOptions);
+        this.popupWindow = window.open(url, '_self', stringifiedOptions);
         window['popup'] = this.popupWindow;
         if (this.popupWindow && this.popupWindow.focus) {
             this.popupWindow.focus();
