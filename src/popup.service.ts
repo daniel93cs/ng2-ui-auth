@@ -66,7 +66,7 @@ export class PopupService {
         let UA = window.navigator.userAgent;
         let windowName = (this.config.cordova || UA.indexOf('CriOS') > -1) ? '_blank' : name;
 
-        this.popupWindow = window.open(url, windowName, stringifiedOptions);
+        this.popupWindow = window.open(url, '_self', stringifiedOptions);
 
         window['popup'] = this.popupWindow;
 
